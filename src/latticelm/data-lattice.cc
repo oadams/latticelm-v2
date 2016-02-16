@@ -62,21 +62,31 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
   if(!in) THROW_ERROR("Could not open " << filename);
   vector<DataLatticePtr> ret;
   // Initialize lattice
-  DataLatticePtr ptr(new DataLattice);
+  DataLatticePtr ptr;
+  ptr = DataLatticePtr(new DataLattice);
+  std::cout << ptr << std::endl;
   StdVectorFst::StateId last_id = ptr->fst_.AddState();
   ptr->fst_.SetStart(last_id);
   StdVectorFst::StateId num_states = last_id + 1;
   StdVectorFst::StateId to_state;
   while(getline(in, line)) {
-    if(line == "\n") {
+    if(line == "") {
+      std::cout << "HERE" << std::endl;
+      std::cout << line.size() << std::endl;
       // If there are no more lines after this, let's leave this loop.
       if(!getline(in, line)) {
         break;
       }
+      std::cout << "to_state: " << to_state << std::endl;
+      std::cout << "ptr: " << ptr << std::endl;
+      //std::cout << "ptr fst: " << ptr->GetFst() << std::endl;
       // Otherwise wrap up this lattice and initialize a new one.
-      ptr->fst_.SetFinal(to_state, StdArc::Weight::One());
+      ptr->GetFst().SetFinal(to_state, StdArc::Weight::One());
+      std::cout << "y" << std::endl;
       ret.push_back(ptr);
-      DataLatticePtr ptr(new DataLattice);
+      std::cout << "HERE2" << std::endl;
+      ptr = DataLatticePtr(new DataLattice);
+      std::cout << ptr << std::endl;
       StdVectorFst::StateId last_id = ptr->fst_.AddState();
       ptr->fst_.SetStart(last_id);
       StdVectorFst::StateId num_states = last_id + 1;
@@ -84,8 +94,12 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
     // Read in tokens
     vector<string> line_tokens;
     boost::split(line_tokens, line, boost::is_any_of("\t "), boost::token_compress_on);
+    //std::cout << "Line tokens: " << line_tokens.size() << std::endl;
+    //std::cout << line_tokens[0] << std::endl;
+    std::cout << line << std::endl;
+    std::cout << line.size() << std::endl;
     if(line_tokens.size() != 5) {
-        THROW_ERROR("Ill-formed FST input. Each line must consist of 5 tokens tab or space delimited.")
+        THROW_ERROR("Ill-formed FST input. Each line must consist of 5 tokens tab or space delimited")
     }
     StdVectorFst::StateId from_state = stoi(line_tokens[0]);
     to_state = stoi(line_tokens[1]);
@@ -97,6 +111,7 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
       ptr->fst_.AddState();
       num_states += 1;
     }
+    cout << "adding arc from" << from_state << " to " << to_state << endl;
     ptr->fst_.AddArc(from_state, StdArc(in, out, weight, to_state));
   }
   // Wrap up the last uncompleted lattice.

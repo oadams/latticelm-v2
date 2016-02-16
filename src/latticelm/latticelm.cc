@@ -92,6 +92,13 @@ int LatticeLM::main(int argc, char** argv) {
 
   // Load data
   vector<DataLatticePtr> lattices = DataLattice::ReadFromFile(file_format_, lattice_weight_, vm["train_file"].as<string>(), vm["trans_file"].as<string>(), cids_, trans_ids_);
+  for(int i=0; i < lattices.size(); i++) {
+    lattices[i]->GetFst().Write("lattice_" + to_string(i) + ".fst");
+    cout << lattices[i] << endl;
+  }
+  for(int i=0; i < cids_.size(); i++) {
+    cout << i << " " << cids_.GetSym(i) << endl;
+  }
 
   // Create the hierarchical LM
   if(model_type_ == "pylm") {
