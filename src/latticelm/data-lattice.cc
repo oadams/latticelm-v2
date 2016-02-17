@@ -62,28 +62,38 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
   if(!in) THROW_ERROR("Could not open " << filename);
   vector<DataLatticePtr> ret;
   // Initialize lattice
-  DataLatticePtr ptr(new DataLattice);
+  DataLatticePtr ptr;
+  ptr = DataLatticePtr(new DataLattice);
+  cout << ptr << endl;
   StdVectorFst::StateId last_id = ptr->fst_.AddState();
+  cout << last_id << endl;
   ptr->fst_.SetStart(last_id);
   StdVectorFst::StateId num_states = last_id + 1;
   StdVectorFst::StateId to_state;
   while(getline(in, line)) {
-    if(line == "\n") {
+    if(line == "") {
+      cout << "emptyline" << endl;
       // If there are no more lines after this, let's leave this loop.
       if(!getline(in, line)) {
         break;
       }
+      cout << "didn't break" << endl;
+      cout << to_state << endl;
+      cout << num_states << endl;
       // Otherwise wrap up this lattice and initialize a new one.
-      ptr->fst_.SetFinal(to_state, StdArc::Weight::One());
+      ptr->fst_.SetFinal(to_state, TropicalWeight(1.0));
       ret.push_back(ptr);
-      DataLatticePtr ptr(new DataLattice);
+      ptr = DataLatticePtr(new DataLattice);
+      cout << "ptr: " << ptr << endl;
       StdVectorFst::StateId last_id = ptr->fst_.AddState();
+      cout << "last_id: " << last_id << endl;
       ptr->fst_.SetStart(last_id);
       StdVectorFst::StateId num_states = last_id + 1;
     }
     // Read in tokens
     vector<string> line_tokens;
     boost::split(line_tokens, line, boost::is_any_of("\t "), boost::token_compress_on);
+    cout << line_tokens << endl;
     if(line_tokens.size() != 5) {
         THROW_ERROR("Ill-formed FST input. Each line must consist of 5 tokens tab or space delimited.")
     }
@@ -97,7 +107,10 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
       ptr->fst_.AddState();
       num_states += 1;
     }
-    ptr->fst_.AddArc(from_state, StdArc(in, out, weight, to_state));
+    cout << from_state << " " << to_state << " " << in << " " << out << endl;
+    cout << weight << endl;
+    StdArc arc(in, out, weight, to_state);
+    ptr->fst_.AddArc(from_state, arc);
   }
   // Wrap up the last uncompleted lattice.
   ptr->fst_.SetFinal(to_state, StdArc::Weight::One());
