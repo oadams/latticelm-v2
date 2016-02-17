@@ -13,7 +13,8 @@ vector<DataLatticePtr> DataLattice::ReadFromFile(const std::string & format, flo
   if(format == "text") {
     data_lattices = ReadFromTextFile(filename, weight, dict);
   } else if (format == "openfst") {
-    data_lattices = ReadFromOpenFSTFile(filename, weight, dict);
+    vector<DataLattice*> something = ReadFromOpenFSTFile(filename, weight, dict);
+    vector<DataLatticePtr> data_lattices;
   } else {
     THROW_ERROR("Illegal file format: " << format);
   }
@@ -45,7 +46,7 @@ vector<DataLatticePtr> DataLattice::ReadFromTextFile(const std::string & filenam
   return ret;
 }
 
-vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & filename, float weight, SymbolSet<string> & dict) {
+vector<DataLattice*> DataLattice::ReadFromOpenFSTFile(const std::string & filename, float weight, SymbolSet<string> & dict) {
   /** Be wary of the assumptions this method makes:
     *   - The input file includes some number of FSTs, each of which is separated by a blank line.
     *   - An FST description is comprised of a number of lines. Each line
@@ -57,18 +58,28 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
     *   - StateIds created by Add state start from 0 and increment.
     *   - I assume I can implicitly cast or convert an integer to a stateid (as evidenced by the call to stoi())
     */
+
+  DataLatticePtr p(new DataLattice);
+  cout << "p: " << p << endl;
+  for(int i=0; i < 5; i++) {
+    DataLatticePtr p(new DataLattice);
+    cout << "p: " << p << endl;
+  }
+
   string line;
   ifstream in(filename);
   if(!in) THROW_ERROR("Could not open " << filename);
-  vector<DataLatticePtr> ret;
+  vector<DataLattice*> ret;
   // Initialize lattice
-  DataLatticePtr ptr(new DataLattice);
+  //DataLatticePtr ptr(new DataLattice);
+  DataLattice* ptr = new DataLattice;
+  cout << "ptr: " << ptr << endl;
   StdVectorFst::StateId last_id = ptr->fst_.AddState();
   ptr->fst_.SetStart(last_id);
   StdVectorFst::StateId num_states = last_id + 1;
   StdVectorFst::StateId to_state;
   while(getline(in, line)) {
-    if(line == "\n") {
+    if(line == "") {
       // If there are no more lines after this, let's leave this loop.
       if(!getline(in, line)) {
         break;
@@ -76,10 +87,14 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
       // Otherwise wrap up this lattice and initialize a new one.
       ptr->fst_.SetFinal(to_state, StdArc::Weight::One());
       ret.push_back(ptr);
-      DataLatticePtr ptr(new DataLattice);
+      ptr = new DataLattice;
+      cout << "ptr: " << ptr << endl;
       StdVectorFst::StateId last_id = ptr->fst_.AddState();
+      //cout << "num_states: " << ptr->fst_.NumStates() << endl;
       ptr->fst_.SetStart(last_id);
-      StdVectorFst::StateId num_states = last_id + 1;
+      cout << "last_id: " << last_id << endl;
+      num_states = last_id + 1;
+      cout << "firstnum_states: " << num_states << endl;
     }
     // Read in tokens
     vector<string> line_tokens;
@@ -87,21 +102,34 @@ vector<DataLatticePtr> DataLattice::ReadFromOpenFSTFile(const std::string & file
     if(line_tokens.size() != 5) {
         THROW_ERROR("Ill-formed FST input. Each line must consist of 5 tokens tab or space delimited.")
     }
+    cout << "secondnum_states: " << num_states << endl;
     StdVectorFst::StateId from_state = stoi(line_tokens[0]);
     to_state = stoi(line_tokens[1]);
     WordId in = dict.GetId(line_tokens[2]);
     WordId out = dict.GetId(line_tokens[3]);
     TropicalWeight weight = TropicalWeight(stof(line_tokens[4]));
     // Add any necessary states before we add the arc.
+    cout << "num_states: " << num_states << endl;
     while(num_states < from_state+1 || num_states < to_state+1) {
       ptr->fst_.AddState();
       num_states += 1;
+      cout << "adding state for ptr: " << ptr << endl;
     }
-    ptr->fst_.AddArc(from_state, StdArc(in, out, weight, to_state));
+    StdArc arc(in, out, weight, to_state);
+    ptr->fst_.AddArc(from_state, arc);
+    //ptr->fst_.AddArc(from_state, StdArc(in, out, weight, to_state));
   }
   // Wrap up the last uncompleted lattice.
   ptr->fst_.SetFinal(to_state, StdArc::Weight::One());
   ret.push_back(ptr);
+  for (int i = 0; i < ret.size(); i++){
+    ret[i]->fst_.Write("thing" + to_string(i) + ".fst");
+  }
+  //vector<DataLatticePtr> shared;
+  //for (int i=0; i < ret.size(); i++) {
+  //    DataLatticePtr sptr(ret[i]);
+  //    shared.push_back(sptr);
+  //}
   return ret;
 }
 

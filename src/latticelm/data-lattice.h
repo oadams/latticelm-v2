@@ -21,7 +21,7 @@ public:
  
   static std::vector<DataLatticePtr> ReadFromFile(const std::string & format, float weight, const std::string & filename, const std::string & trans_filename, SymbolSet<std::string> & dict, SymbolSet<std::string> & trans_dict);
   static std::vector<DataLatticePtr> ReadFromTextFile(const std::string & filename, float weight, SymbolSet<std::string> & dict);
-  static std::vector<DataLatticePtr> ReadFromOpenFSTFile(const std::string & filename, float weight, SymbolSet<std::string> & dict);
+  static std::vector<DataLattice*> ReadFromOpenFSTFile(const std::string & filename, float weight, SymbolSet<std::string> & dict);
   static void ReadTranslations(vector<DataLatticePtr> data_lattices, const string & trans_filename, SymbolSet<std::string> & trans_dict);
 
   const fst::StdVectorFst & GetFst() const { return fst_; }
