@@ -119,7 +119,7 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
 
   for(int f : lattice.GetFWordIds()) {
     reduced_tm.AddArc(only_state, LogArc(f, 0, cpd[0][f], only_state));
-    for(int e = 1; e < f_vocab_size_; e++) {
+    for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
       for(int i = 0; i < times_in; i++) {
         reduced_tm.AddArc(only_state, LogArc(f, e, cpd[e][f], only_state));
