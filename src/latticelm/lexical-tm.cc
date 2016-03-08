@@ -16,29 +16,29 @@ using namespace fst;
 void LexicalTM::RemoveSample(const Alignment & align) {
   //Reduce the counts for the alignments.
   for(int i = 0; i < align.size(); i++) {
-    counts_[align[i].second][align[i].first]--;
-    assert(counts_[align[i].second][align[i].first] >= 0);
+    counts_[align[i].first][align[i].second]--;
+    assert(counts_[align[i].first][align[i].second] >= 0);
   }
 }
 
 void LexicalTM::AddSample(const Alignment & align) {
   //Reduce the counts for the alignments.
   for(int i = 0; i < align.size(); i++) {
-    counts_[align[i].second][align[i].first]++;
-    assert(counts_[align[i].second][align[i].first] > 0);
+    counts_[align[i].first][align[i].second]++;
+    assert(counts_[align[i].first][align[i].second] > 0);
   }
 }
 
 void LexicalTM::PrintCounts() {
   cout << endl << "Alignment counts: " << endl;
   cout << "\t";
-  for(int j = 0; j < f_vocab_size_; j++) {
-    cout << f_vocab_.GetSym(j) << "\t";
+  for(int j = 0; j < e_vocab_size_; j++) {
+    cout << e_vocab_.GetSym(j) << "\t";
   }
   cout << endl;
-  for(int i = 0; i < e_vocab_size_; i++) {
-    cout << e_vocab_.GetSym(i) << "\t";
-    for(int j = 0; j < f_vocab_size_; j++) {
+  for(int i = 0; i < f_vocab_size_; i++) {
+    cout << f_vocab_.GetSym(i) << "\t";
+    for(int j = 0; j < e_vocab_size_; j++) {
       cout << counts_[i][j] << "\t";
     }
     cout << endl;
@@ -55,17 +55,17 @@ void LexicalTM::PrintParams(vector<vector<fst::LogWeight>> cpd, string path) {
   tm_file.open(path);
 
   // %TODO I want to sort the English words by frequency, then show the top foreign translations of each.
-  for(int i = 0; i < e_vocab_size_; i++) {
-    tm_file << i << ", " << e_vocab_.GetSym(i) << endl;
-    vector<pair<int, float>> dist(f_vocab_size_);
-    for (int j = 0; j < f_vocab_size_; j++) {
+  for(int i = 0; i < f_vocab_size_; i++) {
+    tm_file << i << ", " << f_vocab_.GetSym(i) << endl;
+    vector<pair<int, float>> dist(e_vocab_size_);
+    for (int j = 0; j < e_vocab_size_; j++) {
       dist[j] = {j, cpd[i][j].Value()};
     }
     //vector<fst::LogWeight> dist = vector<fst::LogWeight>(cpd[i]);
     std::sort(dist.begin(), dist.end(), boost::bind(&std::pair<int, float>::second, _1) < boost::bind(&std::pair<int, float>::second, _2));
     //for(int j = 0; j < (10 < f_vocab_size_) ? 10 : f_vocab_size_; j++) {
-    for(int j = 0; j < 7; j++) {
-      tm_file << "\t" << dist[j].first << ", " << f_vocab_.GetSym(dist[j].first) << ": " << dist[j].second << endl;
+    for(int j = 0; j < 5; j++) {
+      tm_file << "\t" << dist[j].first << ", " << e_vocab_.GetSym(dist[j].first) << ": " << dist[j].second << endl;
     }
   }
 
@@ -91,8 +91,8 @@ void LexicalTM::PrintParams(vector<vector<fst::LogWeight>> cpd, string path) {
 }
 
 void LexicalTM::Normalize(int epochs) {
-  for(int i = 0; i < e_vocab_size_; i++) {
-    for(int j = 0; j < f_vocab_size_; j++) {
+  for(int i = 0; i < f_vocab_size_; i++) {
+    for(int j = 0; j < e_vocab_size_; j++) {
       cpd_accumulator_[i][j] = fst::Divide(cpd_accumulator_[i][j],LogWeight(-log(epochs)));
     }
   }
@@ -132,12 +132,12 @@ LogWeight LexicalTM::DirichletProb(int e, int f) {
     // %TODO test the correctness of this function
 
     // Get the total counts of e.
-    int e_total = 0;
-    for(int f_prime = 0; f_prime < f_vocab_size_; f_prime++) {
-      e_total += counts_[e][f_prime];
+    int f_total = 0;
+    for(int e_prime = 0; e_prime < e_vocab_size_; e_prime++) {
+      f_total += counts_[f][e_prime];
     }
-    LogWeight numerator = fst::Plus(fst::Times(log_alpha_,base_dist_[e][f]), LogWeight(-log(counts_[e][f])));
-    LogWeight denominator = fst::Plus(log_alpha_,LogWeight(-log(e_total)));
+    LogWeight numerator = fst::Plus(fst::Times(log_alpha_,base_dist_[f][e]), LogWeight(-log(counts_[f][e])));
+    LogWeight denominator = fst::Plus(log_alpha_,LogWeight(-log(f_total)));
     return fst::Divide(numerator,denominator);
 }
 
@@ -150,24 +150,39 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
   Sentence translation = lattice.GetTranslation();
 
   LogWeight total = LogWeight::Zero();
+  /*
   for(int f : lattice.GetFWordIds()) {
     total = fst::Plus(total, DirichletProb(0, f));
   }
   for(int f : lattice.GetFWordIds()) {
     reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0,f), total), only_state));
   }
+  */
+  for(int f : lattice.GetFWordIds()) {
+    cout << f << " ";
+  }
+  cout << endl;
   for(int e = 1; e < e_vocab_size_; e++) {
-    LogWeight total = LogWeight::Zero();
     int times_in = in(e, translation);
-    //for(int i = 0; i < times_in; i++) {
     if(times_in > 0) {
-      for(int f : lattice.GetFWordIds()) {
+      cout << e << " ";
+    }
+  }
+  cout << endl << "------" << endl;
+  for(int f : lattice.GetFWordIds()) {
+  //for(int e = 1; e < e_vocab_size_; e++) {
+    LogWeight total = LogWeight::Zero();
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        cout << e << " ";
         total = fst::Plus(total, DirichletProb(e,f));
       }
-    //}
-      for(int f : lattice.GetFWordIds()) {
-        //LogWeight dupCoef = fst::LogWeight(-1*log(times_in)); // So that we can multiply the weight of the arc by the number of times we see the English word.
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(fst::Times(dupCoef, cpd[e][f]), total), only_state));
+    }
+    cout << endl;
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
         reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
       }
     }
@@ -187,25 +202,27 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
   Sentence translation = lattice.GetTranslation();
 
   LogWeight total = LogWeight::Zero();
+  /*
   for(int f : lattice.GetFWordIds()) {
     total = fst::Plus(total, cpd[0][f]);
   }
   for(int f : lattice.GetFWordIds()) {
     reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(cpd[0][f], total), only_state));
   }
-  for(int e = 1; e < e_vocab_size_; e++) {
+  */
+  //for(int e = 1; e < e_vocab_size_; e++) {
+  for(int f : lattice.GetFWordIds()) {
     LogWeight total = LogWeight::Zero();
-    int times_in = in(e, translation);
-    //for(int i = 0; i < times_in; i++) {
-    if(times_in > 0) {
-      for(int f : lattice.GetFWordIds()) {
-        total = fst::Plus(total, cpd[e][f]);
+    for(int e = 1; e < e_vocab_size_; e++ ) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        total = fst::Plus(total, cpd[f][e]);
       }
-    //}
-      for(int f : lattice.GetFWordIds()) {
-        //LogWeight dupCoef = fst::LogWeight(-1*log(times_in)); // So that we can multiply the weight of the arc by the number of times we see the English word.
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(fst::Times(dupCoef, cpd[e][f]), total), only_state));
-        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(cpd[e][f], total), only_state));
+    }
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(cpd[f][e], total), only_state));
       }
     }
   }
@@ -290,12 +307,12 @@ Alignment LexicalTM::CreateSample(const DataLattice & lattice, LLStats & stats) 
 void LexicalTM::ResampleParameters() {
   // Specify hyperparameters of the Dirichlet Process.
   // We assume a uniform distribution, base_dist_, which has been initialized to uniform.
-  for(int i = 0; i < e_vocab_size_; i++) {
+  for(int i = 0; i < f_vocab_size_; i++) {
     double row_total = 0;
-    for(int j = 0; j < f_vocab_size_; j++) {
+    for(int j = 0; j < e_vocab_size_; j++) {
       row_total += counts_[i][j];
     }
-    for(int j = 0; j < f_vocab_size_; j++) {
+    for(int j = 0; j < e_vocab_size_; j++) {
       LogWeight numerator = fst::Plus(fst::Times(log_alpha_,base_dist_[i][j]), LogWeight(-log(counts_[i][j])));
       LogWeight denominator = fst::Plus(log_alpha_,LogWeight(-log(row_total)));
       cpd_accumulator_[i][j] = fst::Plus(cpd_accumulator_[i][j], fst::Divide(numerator,denominator));

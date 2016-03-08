@@ -24,13 +24,13 @@ public:
     // Zero the count vectors. Assign uniform log probabilities to the CPD
 
     // Doesn't matter if we're including or excluding foreign epsilons as we're conditioning on the foreign side.
-    for(int i=0; i < e_vocab_size_; i++) {
+    for(int i=0; i < f_vocab_size_; i++) {
       vector<fst::LogWeight> cpd_accumulator_row;
       vector<fst::LogWeight> base_dist_row;
       vector<int> counts_row;
-      for(int j=0; j < f_vocab_size_; j++) {
+      for(int j=0; j < e_vocab_size_; j++) {
         cpd_accumulator_row.push_back(fst::LogWeight::Zero());
-        base_dist_row.push_back(fst::LogWeight(-log(1.0/f_vocab_size_)));
+        base_dist_row.push_back(fst::LogWeight(-log(1.0/e_vocab_size_)));
         counts_row.push_back(0);
       }
       cpd_accumulator_.push_back(cpd_accumulator_row);
