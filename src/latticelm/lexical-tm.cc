@@ -158,6 +158,7 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
     reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0,f), total), only_state));
   }
   */
+  /*
   for(int f : lattice.GetFWordIds()) {
     cout << f << " ";
   }
@@ -169,17 +170,18 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
     }
   }
   cout << endl << "------" << endl;
+  */
   for(int f : lattice.GetFWordIds()) {
   //for(int e = 1; e < e_vocab_size_; e++) {
     LogWeight total = LogWeight::Zero();
     for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
       if(times_in > 0) {
-        cout << e << " ";
+        //cout << e << " ";
         total = fst::Plus(total, DirichletProb(e,f));
       }
     }
-    cout << endl;
+    //cout << endl;
     for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
       if(times_in > 0) {
