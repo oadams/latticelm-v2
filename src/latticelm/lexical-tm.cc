@@ -181,6 +181,8 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
         total = fst::Plus(total, DirichletProb(e,f));
       }
     }
+    total = fst::Plus(total, DirichletProb(0,f));
+    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
     //cout << endl;
     for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
@@ -221,6 +223,8 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
         total = fst::Plus(total, cpd[f][e]);
       }
     }
+    total = fst::Plus(total, DirichletProb(0,f));
+    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
     for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
       if(times_in > 0) {
@@ -286,7 +290,7 @@ Alignment LexicalTM::CreateSample(const DataLattice & lattice, LLStats & stats) 
 
   // Perform reduction on TM to make it conform to the lattice.translation_
   VectorFst<LogArc> reduced_tm = CreateReducedTM(lattice);
-  reduced_tm.Write("reduced_tm.fst");
+  //reduced_tm.Write("reduced_tm.fst");
 
   //lattice.GetFst().Write("lattice.fst");
 
@@ -307,9 +311,18 @@ Alignment LexicalTM::CreateSample(const DataLattice & lattice, LLStats & stats) 
 }
 
 void LexicalTM::ResampleParameters() {
+  bool debug = false;
   // Specify hyperparameters of the Dirichlet Process.
   // We assume a uniform distribution, base_dist_, which has been initialized to uniform.
+  if (debug) cout << std::fixed << std::setw( 1 ) << std::setprecision( 3 );
+  if (debug) {
+    for(int j = 0; j < e_vocab_size_; j++) {
+      cout << "\t" << e_vocab_.GetSym(j);
+    }
+  }
+  if (debug) cout << endl;
   for(int i = 0; i < f_vocab_size_; i++) {
+    if (debug) cout << f_vocab_.GetSym(i);
     double row_total = 0;
     for(int j = 0; j < e_vocab_size_; j++) {
       row_total += counts_[i][j];
@@ -317,8 +330,10 @@ void LexicalTM::ResampleParameters() {
     for(int j = 0; j < e_vocab_size_; j++) {
       LogWeight numerator = fst::Plus(fst::Times(log_alpha_,base_dist_[i][j]), LogWeight(-log(counts_[i][j])));
       LogWeight denominator = fst::Plus(log_alpha_,LogWeight(-log(row_total)));
+      if (debug) cout << "\t" << fst::Divide(numerator, denominator);
       cpd_accumulator_[i][j] = fst::Plus(cpd_accumulator_[i][j], fst::Divide(numerator,denominator));
     }
+    if (debug) cout << endl;
   }
 }
 
