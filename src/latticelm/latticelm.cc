@@ -32,9 +32,9 @@ void LatticeLM::PerformTrainingLexTM(const vector<DataLatticePtr> & lattices, Le
       cerr << "time: " << time_.Elapsed() << endl;
       alignments[align_id] = tm.CreateSample(*lattices[align_id], ep_stats);
       tm.AddSample(alignments[align_id]);
-      //tm.PrintCounts();
     }
     cerr << "Finished epoch " << epoch << ": char=" << ep_stats.words_ << ", ppl=" << ep_stats.CalcPPL() << " (s=" << time_.Elapsed() << ")" << endl;
+    //tm.PrintCounts();
     tm.ResampleParameters();
     //tm.PrintParams("data/out/params/tm.sample" + to_string(epoch));
   }
