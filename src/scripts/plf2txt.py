@@ -55,9 +55,9 @@ def convert_file(es_in_fn, es_out_fn, en_in_fn, en_out_fn):
     corresponding English line."""
     with open(es_in_fn) as input_file:
         es_input_lines = input_file.readlines()
-    with io.open(en_in_fn, encoding="utf-8") as input_file:
+    with open(en_in_fn) as input_file:
         en_input_lines = input_file.readlines()
-    with open(es_out_fn, "w") as es_out_file, io.open(en_out_fn, "w", encoding="utf-8") as en_out_file:
+    with open(es_out_fn, "w") as es_out_file, open(en_out_fn, "w") as en_out_file:
         i = 0
         for i in range(len(es_input_lines)):
             plf = es_input_lines[i]

@@ -14,17 +14,17 @@ with io.open(sys.argv[2], encoding="utf8") as tm_f:
     tm_lines = tm_f.readlines()
 with io.open(sys.argv[3], encoding="utf8") as gold_f:
     gold_lines = gold_f.readlines()
-with io.open(sys.argv[4], encoding="utf8") as asr_f:
-    asr_lines = asr_f.readlines()
+#with io.open(sys.argv[4], encoding="utf8") as asr_f:
+#    asr_lines = asr_f.readlines()
 
 plain_lines = [line.strip() for line in plain_lines]
-asr_lines = [line.strip() for line in asr_lines]
+#asr_lines = [line.strip() for line in asr_lines]
 tm_lines = [line.strip() for line in tm_lines]
 gold_lines = [line.strip() for line in gold_lines]
 
 assert len(plain_lines) == len(tm_lines)
 assert len(plain_lines) == len(gold_lines)
-assert len(plain_lines) == len(asr_lines)
+#assert len(plain_lines) == len(asr_lines)
 
 i = 0
 count_better = 0
@@ -34,32 +34,24 @@ for i in range(len(plain_lines)):
     gold_line = gold_lines[i].split()
     plain_line = plain_lines[i].split()
     tm_line = tm_lines[i].split()
-    asr_line = asr_lines[i].split()
+#    asr_line = asr_lines[i].split()
 
     plain_dist = distance.min_edit_distance(gold_line, plain_line)
     tm_dist = distance.min_edit_distance(gold_line, tm_line)
 
-    i += 1
-    if asr_line != plain_line:
+    if tm_dist < plain_dist:
+        count_better += 1
+    elif tm_dist > plain_dist:
+        print(i)
+        print("Gold:\t", gold_line)
+        print("Plain (med %d):\t" % plain_dist, plain_line)
+        #print("1best:\t", one_best_lines[i])
+        print("TM (med %d):\t" % tm_dist, tm_line)
+        print("===")
+        #raw_input()
         count_worse += 1
-        print("Approx. line %d" % i)
-        print("ASR ", " ".join(asr_line))
-        print("Plain ", " ".join(plain_line))
-        print("---")
-
-    #if tm_dist < plain_dist:
-    #    count_better += 1
-    #elif tm_dist > plain_dist:
-    #    print(i)
-    #    print("Gold:\t", gold_line)
-    #    print("Plain (med %d):\t" % plain_dist, plain_line)
-    #    #print("1best:\t", one_best_lines[i])
-    #    print("TM (med %d):\t" % tm_dist, tm_line)
-    #    print("===")
-    #    raw_input()
-    #    count_worse += 1
-    #else:
-    #    count_same += 1
+    else:
+        count_same += 1
 
 print(count_better)
 print(count_worse)
