@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Remove carriage returns from files
+corpus_dir=${1%/}
+for file in $corpus_dir/ldc/*; do
+	./remove_CR "$file"
+done
+
+
+# Make fisher_dev, fisher_dev2, and fisher_test.en the 0th copy.
+cp $corpus_dir/ldc/fisher_dev.en.0 $corpus_dir/ldc/fisher_dev.en
+cp $corpus_dir/ldc/fisher_dev2.en.0 $corpus_dir/ldc/fisher_dev2.en
+cp $corpus_dir/ldc/fisher_test.en.0 $corpus_dir/ldc/fisher_test.en
+
+for file in $corpus_dir/ldc/*.es; do
+	file=$(basename $file)
+	prefix="${file%.es}"
+	./plf2txt.py $corpus_dir $prefix
+done
