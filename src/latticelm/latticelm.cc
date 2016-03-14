@@ -83,6 +83,7 @@ int LatticeLM::main(int argc, char** argv) {
       ("lattice_weight", po::value<float>()->default_value(1.f), "Amount of weight to give to the lattice probabilities")
       ("verbose", po::value<int>()->default_value(1), "Verbosity of messages to print")
       ("concentration", po::value<float>()->default_value(1.0), "The concentration parameter for the Dirichlet process of the translation model.")
+      ("plain_best_paths", po::value<string>()->default_value(""), "Give a path here for latticelm to simply return the best paths through the lattice.")
       ;
   boost::program_options::variables_map vm;
   po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -91,10 +92,6 @@ int LatticeLM::main(int argc, char** argv) {
       cout << desc << endl;
       return 1;
   }
-
-  // Create the timer
-  time_ = Timer();
-  cerr << "Started training! (s=" << time_.Elapsed() << ")" << endl;
 
   // Temporary buffers
   string line;
@@ -123,6 +120,17 @@ int LatticeLM::main(int argc, char** argv) {
 
   // Load data
   vector<DataLatticePtr> lattices = DataLattice::ReadFromFile(file_format_, lattice_weight_, vm["train_file"].as<string>(), vm["trans_file"].as<string>(), cids_, trans_ids_);
+
+  if(!vm["plain_best_paths"].as<string>().empty()) {
+    LexicalTM tm(cids_, trans_ids_, alpha_);
+    tm.FindBestPlainLatticePaths(lattices, "data/out/plain_best_paths/"+vm["plain_best_paths"].as<string>());
+    return 0;
+  }
+
+  // Create the timer
+  time_ = Timer();
+  cerr << "Started training! (s=" << time_.Elapsed() << ")" << endl;
+
 
   // Create the hierarchical LM
   if(model_type_ == "pylm") {

@@ -8,7 +8,12 @@ weights=(0.5 1 2 4)
 
 outf="data/out/${dataset}_results.csv"
 
-printf "score\tepochs\talpha\tweight\n" > $outf
+./plain_best_paths $dataset
+printf "ASR 1-best: " > $outf
+python ../nlp/per.py \
+		--ref data/fisher-callhome/corpus/ldc/${dataset}.es.nopunc.lower \
+		--hypo data/out/plain_best_paths/${dataset}.es >> $outf
+printf "score\tepochs\talpha\tweight\n" >> $outf
 for alpha in "${alphas[@]}"; do
 	for weight in "${weights[@]}"; do
 		./run $dataset $epochs $alpha $weight
