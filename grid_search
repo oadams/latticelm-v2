@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dataset="fisher_test"
+dataset=$1
 epochs=10
 
 alphas=(0.5 1 2 4)

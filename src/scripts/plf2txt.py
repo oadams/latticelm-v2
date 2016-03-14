@@ -90,9 +90,10 @@ def jointly_process_files(corpus_root, prefix):
             if gold_lines[i] == "\n" or trans_lines[i] == "\n":
                 continue
 
+            if i != 0:
+                print("", file=lat_file)
             for line in lattices[i]:
                 print(line, file=lat_file)
-            print("", file=lat_file)
 
             print(gold_lines[i], file=gold_file, end="")
             print(trans_lines[i], file=trans_file, end="")
