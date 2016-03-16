@@ -36,6 +36,7 @@ protected:
   int char_n_, word_n_;
   float lattice_weight_;
   float alpha_; //A concentration parameter, if you want it.
+  float discount_; //A discount param for the Pitman-Yor process. Defaults to 0 making a Dirichlet process.
 
   Timer time_;
 

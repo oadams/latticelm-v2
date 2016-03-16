@@ -14,7 +14,7 @@ class LexicalTM {
 
 public:
 
-  LexicalTM(SymbolSet<std::string> f_vocab, SymbolSet<std::string> e_vocab, float alpha) {
+  LexicalTM(SymbolSet<std::string> f_vocab, SymbolSet<std::string> e_vocab, float alpha, float discount) {
     f_vocab_size_ = f_vocab.size();
     e_vocab_size_ = e_vocab.size();
     f_vocab_ = f_vocab;
@@ -68,6 +68,7 @@ protected:
   SymbolSet<std::string> f_vocab_;
   SymbolSet<std::string> e_vocab_;
   LogWeight log_alpha_; //Concentration parameter for the Dirichlet process.
+  float discount;
 
   // A grid that stores the sampling of the CPD at each iteration and gets
   // normalized after all the sampling is complete.

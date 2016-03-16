@@ -128,7 +128,7 @@ int in(WordId word_id, Sentence sentence) {
   return ret;
 }
 
-LogWeight LexicalTM::DirichletProb(int e, int f) {
+LogWeight LexicalTM::PitmanYorProb(int e, int f) {
     // %TODO test the correctness of this function
 
     // Get the total counts of e.
