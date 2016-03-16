@@ -122,7 +122,7 @@ int LatticeLM::main(int argc, char** argv) {
 
   if(!vm["plain_best_paths"].as<string>().empty()) {
     LexicalTM tm(cids_, trans_ids_, alpha_);
-    tm.FindBestPlainLatticePaths(lattices, "data/out/" + vm["plain_best_paths"].as<string>());
+    tm.FindBestPlainLatticePaths(lattices, "data/out/plain_best_paths/" + vm["plain_best_paths"].as<string>());
     return 0;
   }
 
