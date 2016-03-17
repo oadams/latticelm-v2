@@ -184,7 +184,7 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
     }
     */
     //total = fst::Plus(total, DirichletProb(0,f));
-    //reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
+    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
     //cout << endl;
     for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
@@ -229,7 +229,7 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
     }
     */
     //total = fst::Plus(total, DirichletProb(0,f));
-    //reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
+    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
     for(int e = 1; e < e_vocab_size_; e++) {
       int times_in = in(e, translation);
       if(times_in > 0) {
