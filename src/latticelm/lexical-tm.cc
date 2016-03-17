@@ -149,16 +149,8 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
 
   Sentence translation = lattice.GetTranslation();
 
-  // \frac{p(e|f)}{\sum_{f'}p(e|f')}
+  // \frac{p(e|f)}{\sum_{f'}p(e|f')} with no nulls
 
-  // Deal with the null probability
-  LogWeight total = LogWeight::Zero();
-  for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, DirichletProb(0,f));
-  }
-  for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0,f), total), only_state));
-  }
   // Deal with the rest of the probabilities
   for(int e = 1; e < e_vocab_size_; e++) {
     int times_in = in(e, translation);
@@ -187,16 +179,8 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
 
   Sentence translation = lattice.GetTranslation();
 
-  // \frac{p(e|f)}{\sum_{f'}p(e|f')}
+  // \frac{p(e|f)}{\sum_{f'}p(e|f')} with no nulls
 
-  // Deal with the null probability
-  LogWeight total = LogWeight::Zero();
-  for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, cpd[f][0]);
-  }
-  for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(cpd[f][0], total), only_state));
-  }
   // Deal with the rest of the probabilities
   for(int e = 1; e < e_vocab_size_; e++) {
     int times_in = in(e, translation);
