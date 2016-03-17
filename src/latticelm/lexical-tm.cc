@@ -149,51 +149,30 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
 
   Sentence translation = lattice.GetTranslation();
 
+  // \frac{p(e|f)}{\sum_{f'}p(e|f')}
+
+  // Deal with the null probability
   LogWeight total = LogWeight::Zero();
-  /*
   for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, DirichletProb(0, f));
+    total = fst::Plus(total, DirichletProb(0,f));
   }
   for(int f : lattice.GetFWordIds()) {
     reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0,f), total), only_state));
   }
-  */
-  /*
-  for(int f : lattice.GetFWordIds()) {
-    cout << f << " ";
-  }
-  cout << endl;
+  // Deal with the rest of the probabilities
   for(int e = 1; e < e_vocab_size_; e++) {
     int times_in = in(e, translation);
     if(times_in > 0) {
-      cout << e << " ";
-    }
-  }
-  cout << endl << "------" << endl;
-  */
-  for(int f : lattice.GetFWordIds()) {
-  //for(int e = 1; e < e_vocab_size_; e++) {
-    /*
-    LogWeight total = LogWeight::Zero();
-    for(int e = 1; e < e_vocab_size_; e++) {
-      int times_in = in(e, translation);
-      if(times_in > 0) {
-        //cout << e << " ";
+      LogWeight total = LogWeight::Zero();
+      for(int f : lattice.GetFWordIds()) {
         total = fst::Plus(total, DirichletProb(e,f));
       }
-    }
-    */
-    //total = fst::Plus(total, DirichletProb(0,f));
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
-    //cout << endl;
-    for(int e = 1; e < e_vocab_size_; e++) {
-      int times_in = in(e, translation);
-      if(times_in > 0) {
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
-        reduced_tm.AddArc(only_state, LogArc(f, e, DirichletProb(e,f), only_state));
+      for(int f : lattice.GetFWordIds()) {
+        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
       }
     }
   }
+
   //ArcSortFst<LogArc, ILabelCompare<LogArc>>(reduced_tm, ILabelCompare<LogArc>());
   ArcSort(&reduced_tm, ILabelCompare<LogArc>());
   return reduced_tm;
@@ -208,37 +187,30 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
 
   Sentence translation = lattice.GetTranslation();
 
+  // \frac{p(e|f)}{\sum_{f'}p(e|f')}
+
+  // Deal with the null probability
   LogWeight total = LogWeight::Zero();
-  /*
   for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, cpd[0][f]);
+    total = fst::Plus(total, cpd[f][0]);
   }
   for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(cpd[0][f], total), only_state));
+    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(cpd[f][0], total), only_state));
   }
-  */
-  //for(int e = 1; e < e_vocab_size_; e++) {
-  for(int f : lattice.GetFWordIds()) {
-    /*
-    LogWeight total = LogWeight::Zero();
-    for(int e = 1; e < e_vocab_size_; e++ ) {
-      int times_in = in(e, translation);
-      if(times_in > 0) {
+  // Deal with the rest of the probabilities
+  for(int e = 1; e < e_vocab_size_; e++) {
+    int times_in = in(e, translation);
+    if(times_in > 0) {
+      LogWeight total = LogWeight::Zero();
+      for(int f : lattice.GetFWordIds()) {
         total = fst::Plus(total, cpd[f][e]);
       }
-    }
-    */
-    //total = fst::Plus(total, DirichletProb(0,f));
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0, f), total), only_state));
-    for(int e = 1; e < e_vocab_size_; e++) {
-      int times_in = in(e, translation);
-      if(times_in > 0) {
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(cpd[f][e], total), only_state));
-        reduced_tm.AddArc(only_state, LogArc(f, e, cpd[f][e], only_state));
+      for(int f : lattice.GetFWordIds()) {
+        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(cpd[f][e], total), only_state));
       }
     }
   }
-  //ArcSortFst<LogArc, ILabelCompare<LogArc>>(reduced_tm, ILabelCompare<LogArc>());
+
   ArcSort(&reduced_tm, ILabelCompare<LogArc>());
   return reduced_tm;
 }
