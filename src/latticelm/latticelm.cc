@@ -129,7 +129,7 @@ int LatticeLM::main(int argc, char** argv) {
 
   if(!vm["using_external_tm"].as<string>().empty()) {
     LexicalTM tm(cids_, trans_ids_, alpha_);
-    vector<vector<fst::LogWeight>> tm_params = tm.load_TM(vm["using_external_tm"].as<string>());
+    vector<vector<fst::LogWeight>> tm_params = tm.load_f2e_TM(vm["using_external_tm"].as<string>());
     tm.FindBestPaths(lattices, "data/out/external_tm_alignments.txt", tm_params);
     return 0;
   }

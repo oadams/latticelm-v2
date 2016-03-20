@@ -405,7 +405,8 @@ void LexicalTM::FindBestPlainLatticePaths(const vector<DataLatticePtr> & lattice
     out_file.close();
 }
 
-vector<vector<fst::LogWeight>> LexicalTM::load_TM(const string filename) {
+/** Loads a GIZA++ lexical translation model of p(f|e) if the filename ends in e2f*/
+vector<vector<fst::LogWeight>> LexicalTM::load_e2f_TM(const string filename) {
   ifstream in(filename);
   if(!in) THROW_ERROR("Could not open " << filename);
 
@@ -452,6 +453,44 @@ vector<vector<fst::LogWeight>> LexicalTM::load_TM(const string filename) {
     cout << total << endl;
   }
   */
+
+  return tm;
+}
+
+/** Loads a GIZA++ lexical translation model of p(f|e) if the filename ends in e2f*/
+vector<vector<fst::LogWeight>> LexicalTM::load_f2e_TM(const string filename) {
+  ifstream in(filename);
+  if(!in) THROW_ERROR("Could not open " << filename);
+
+  // Initialize translation model
+  vector<vector<fst::LogWeight>> tm;
+  for(int f = 0; f < f_vocab_size_; f++) {
+    vector<fst::LogWeight> row;
+    for(int e = 0; e < e_vocab_size_; e++) {
+      row.push_back(LogWeight::Zero());
+    }
+    tm.push_back(row);
+  }
+
+  string line;
+  while(getline(in, line)) {
+    vector<string> line_tokens;
+    boost::split(line_tokens, line, boost::is_any_of(" "), boost::token_compress_on);
+    if(line_tokens.size() != 3) {
+      cerr << "tm line: " << line_tokens << endl;
+      THROW_ERROR("Translation model line must consist of 3 tokens space delimited.");
+    }
+    string e = line_tokens[0];
+    string f = line_tokens[1];
+    float real_prob = stof(line_tokens[2]);
+    LogWeight prob = LogWeight(-1*log(real_prob));
+
+    if(real_prob <= 0.f) { 
+      THROW_ERROR("TM probs loaded must be greater than 0.0");
+    }
+
+    tm[(f != "NULL") ? f_vocab_.GetId(f) : 0][(e != "NULL") ? e_vocab_.GetId(e) : 0] = prob;
+  }
 
   return tm;
 }

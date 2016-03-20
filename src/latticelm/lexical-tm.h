@@ -61,7 +61,8 @@ public:
   void PrintParams(vector<vector<fst::LogWeight>> cpd, string path);
   void PrintCounts();
 
-  vector<vector<fst::LogWeight>> load_TM(const string filename);
+  vector<vector<fst::LogWeight>> load_f2e_TM(const string filename);
+  vector<vector<fst::LogWeight>> load_e2f_TM(const string filename);
 
 protected:
 
