@@ -20,6 +20,7 @@ public:
     f_vocab_ = f_vocab;
     e_vocab_ = e_vocab;
     log_alpha_ = LogWeight(-log(alpha));
+    log_discount_ = LogWeight(-log(discount));
 
     // Zero the count vectors. Assign uniform log probabilities to the CPD
 
@@ -49,7 +50,7 @@ public:
   void FindBestPaths(const vector<DataLatticePtr> & lattices, string align_fn);
   void FindBestPlainLatticePaths(const vector<DataLatticePtr> & lattices, string out_fn);
   void Normalize(int epochs);
-  LogWeight DirichletProb(int e, int f);
+  LogWeight PitmanYorProb(int e, int f);
 
   // Test methods to be moved elsewhere later
   void TestLogWeightSampling();
@@ -67,8 +68,8 @@ protected:
   int e_vocab_size_;
   SymbolSet<std::string> f_vocab_;
   SymbolSet<std::string> e_vocab_;
-  LogWeight log_alpha_; //Concentration parameter for the Dirichlet process.
-  float discount;
+  LogWeight log_alpha_; //Concentration parameter for the Pitman-Yor process.
+  LogWeight log_discount_; //Discount parameter for the Pitman-Yor process
 
   // A grid that stores the sampling of the CPD at each iteration and gets
   // normalized after all the sampling is complete.
@@ -77,6 +78,9 @@ protected:
   vector<vector<fst::LogWeight>> base_dist_;
   // The number of times we've seen a Foreign WordId align to an English WordId.
   vector<vector<int>> counts_;
+  // The number of times the base distribution was called for a given lattice.
+  vector<int> table_counts_per_lattice;
+  int table_counts_;
 
 };
 

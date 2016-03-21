@@ -123,7 +123,7 @@ int LatticeLM::main(int argc, char** argv) {
   vector<DataLatticePtr> lattices = DataLattice::ReadFromFile(file_format_, lattice_weight_, vm["train_file"].as<string>(), vm["trans_file"].as<string>(), cids_, trans_ids_);
 
   if(!vm["plain_best_paths"].as<string>().empty()) {
-    LexicalTM tm(cids_, trans_ids_, alpha_);
+    LexicalTM tm(cids_, trans_ids_, alpha_, discount_);
     tm.FindBestPlainLatticePaths(lattices, "data/out/" + vm["plain_best_paths"].as<string>());
     return 0;
   }

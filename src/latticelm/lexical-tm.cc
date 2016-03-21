@@ -136,9 +136,23 @@ LogWeight LexicalTM::PitmanYorProb(int e, int f) {
     for(int f_prime = 0; f_prime < f_vocab_size_; f_prime++) {
       e_total += counts_[e][f_prime];
     }
-    LogWeight numerator = fst::Plus(fst::Times(log_alpha_,base_dist_[e][f]), LogWeight(-log(counts_[e][f])));
+
     LogWeight denominator = fst::Plus(log_alpha_,LogWeight(-log(e_total)));
-    return fst::Divide(numerator,denominator);
+
+    LogWeight term1;
+    LogWeight term2;
+    if(counts_[e][f] == 0) {
+      term2 = LogWeight::Zero();
+    } else {
+      LogWeight numerator = fst::Minus(LogWeight(-log(counts_[e][f])), log_discount_);
+      term2 = fst::Divide(numerator, denominator);
+    }
+
+    LogWeight numerator = fst::Plus(log_alpha_, fst::Times(log_discount_,LogWeight(-log(table_counts_))));
+    numerator = fst::Times(numerator, base_dist_[e][f]);
+    term1 = fst::Divide(numerator, denominator);
+
+    return fst::Plus(term1, term2);
 }
 
 VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
@@ -164,13 +178,13 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
     //for(int i = 0; i < times_in; i++) {
     if(times_in > 0) {
       for(int f : lattice.GetFWordIds()) {
-        total = fst::Plus(total, DirichletProb(e,f));
+        total = fst::Plus(total, PitmanYorProb(e,f));
       }
     //}
       for(int f : lattice.GetFWordIds()) {
         //LogWeight dupCoef = fst::LogWeight(-1*log(times_in)); // So that we can multiply the weight of the arc by the number of times we see the English word.
         //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(fst::Times(dupCoef, cpd[e][f]), total), only_state));
-        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
+        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(PitmanYorProb(e,f), total), only_state));
       }
     }
   }
