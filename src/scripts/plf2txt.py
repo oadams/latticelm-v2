@@ -47,7 +47,7 @@ exclude.add(u"¡")
 def remove_punctuation(line):
     return "".join(c for c in line if c not in exclude)
 
-def jointly_process_files(corpus_root, prefix):
+def jointly_process_files(corpus_root, prefix, num_sents):
     """ Takes a corpus prefix and performs joint processing of (1) The
     word-lattices (2) The Spanish gold LDC transcription (3) The English
     transcription.
@@ -83,6 +83,13 @@ def jointly_process_files(corpus_root, prefix):
     assert len(lattices) == len(gold_lines)
     assert len(lattices) == len(trans_lines)
 
+    lattices = lattices[:num_sents]
+    gold_lines = gold_lines[:num_sents]
+    trans_lines = trans_lines[:num_sents]
+
+    plf_path+=(".num_sents%d" % num_sents) if num_sents else ""
+    gold_path+=(".num_sents%d" % num_sents) if num_sents else ""
+    trans_path+=(".num_sents%d" % num_sents) if num_sents else ""
     with open(plf_path+".lat", "w") as lat_file, open(gold_path+".nopunc.lower", "w") as gold_file, open(trans_path+".nopunc.lower", "w") as trans_file:
         for i in range(len(lattices)):
             if lattices[i] == []:
@@ -99,7 +106,14 @@ def jointly_process_files(corpus_root, prefix):
             print(trans_lines[i], file=trans_file, end="")
 
 if __name__ == "__main__":
+    if len(sys.argv) > 4:
+        print("Too many args.Open up the script to see why")
+        sys.exit()
+
     corpus_root = sys.argv[1]
     prefix = sys.argv[2]
 
-    jointly_process_files(corpus_root, prefix)
+    num_sents=None
+    if len(sys.argv) == 4:
+        num_sents = int(sys.argv[3])
+    jointly_process_files(corpus_root, prefix, num_sents)

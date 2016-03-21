@@ -1,0 +1,18 @@
+#!/bin/bash
+
+dataset="callhome_evltest"
+end=1818
+cuts=10
+diff=$((end/cuts))
+epochs=10
+alpha=1
+weight=1
+
+printf "\n\n" >> CALLHOME_RESULTS
+for ((i=0;i<$cuts;i++)); do
+	num_sents=$((end-i*diff))
+	src/scripts/plf2txt.py data/fisher-callhome/corpus $dataset $num_sents
+	./run $dataset $epochs $alpha $weight $num_sents
+	printf "%b, " $num_sents >> CALLHOME_RESULTS
+	./wer $dataset $epochs $alpha $weight $num_sents >> CALLHOME_RESULTS
+done
