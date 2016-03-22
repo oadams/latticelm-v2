@@ -7,4 +7,4 @@ weight=$4
 
 python ~/code/nlp/per.py \
 		--ref data/fisher-callhome/corpus/ldc/${name}.es.nopunc.lower \
-		--hypo data/out/transcriptions/${name}.epochs${epochs}.alpha${alpha}.weight${weight}.es \
+		--hypo data/out/transcriptions/${name}.nonstandard.epochs${epochs}.alpha${alpha}.weight${weight}.es \

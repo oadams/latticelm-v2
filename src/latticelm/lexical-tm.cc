@@ -149,15 +149,23 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
 
   Sentence translation = lattice.GetTranslation();
 
+  for(int f : lattice.GetFWordIds()) {
+    LogWeight total = LogWeight::Zero();
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        total = fst::Plus(total, DirichletProb(e,f));
+      }
+    }
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
+      }
+    }
+  }
+
   /*
-  LogWeight total = LogWeight::Zero();
-  for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, DirichletProb(0, f));
-  }
-  for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0,f), total), only_state));
-  }
-  */
   for(int e = 1; e < e_vocab_size_; e++) {
     LogWeight total = LogWeight::Zero();
     int times_in = in(e, translation);
@@ -168,12 +176,11 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
       }
     //}
       for(int f : lattice.GetFWordIds()) {
-        //LogWeight dupCoef = fst::LogWeight(-1*log(times_in)); // So that we can multiply the weight of the arc by the number of times we see the English word.
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(fst::Times(dupCoef, cpd[e][f]), total), only_state));
         reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
       }
     }
   }
+  */
   //ArcSortFst<LogArc, ILabelCompare<LogArc>>(reduced_tm, ILabelCompare<LogArc>());
   ArcSort(&reduced_tm, ILabelCompare<LogArc>());
   return reduced_tm;
@@ -188,15 +195,23 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
 
   Sentence translation = lattice.GetTranslation();
 
+  for(int f : lattice.GetFWordIds()) {
+    LogWeight total = LogWeight::Zero();
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        total = fst::Plus(total, DirichletProb(e,f));
+      }
+    }
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
+        reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
+      }
+    }
+  }
+
   /*
-  LogWeight total = LogWeight::Zero();
-  for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, cpd[0][f]);
-  }
-  for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(cpd[0][f], total), only_state));
-  }
-  */
   for(int e = 1; e < e_vocab_size_; e++) {
     LogWeight total = LogWeight::Zero();
     int times_in = in(e, translation);
@@ -213,6 +228,7 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
       }
     }
   }
+  */
   //ArcSortFst<LogArc, ILabelCompare<LogArc>>(reduced_tm, ILabelCompare<LogArc>());
   ArcSort(&reduced_tm, ILabelCompare<LogArc>());
   return reduced_tm;
