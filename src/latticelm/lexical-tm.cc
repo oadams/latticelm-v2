@@ -150,32 +150,11 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
 
   Sentence translation = lattice.GetTranslation();
 
-  /*
-  LogWeight total = LogWeight::Zero();
-  for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, DirichletProb(0, f));
-  }
-  for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(DirichletProb(0,f), total), only_state));
-  }
-  */
   for(int e = 1; e < e_vocab_size_; e++) {
-    LogWeight total = LogWeight::Zero();
     int times_in = in(e, translation);
-    //for(int i = 0; i < times_in; i++) {
     if(times_in > 0) {
       for(int f : lattice.GetFWordIds()) {
-        total = fst::Plus(total, DirichletProb(e,f));
-      }
-    //}
-      for(int f : lattice.GetFWordIds()) {
-        //LogWeight dupCoef = fst::LogWeight(-1*log(times_in)); // So that we can multiply the weight of the arc by the number of times we see the English word.
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(fst::Times(dupCoef, cpd[e][f]), total), only_state));
-        if(total == LogWeight::Zero()) {
-          reduced_tm.AddArc(only_state, LogArc(f, e, LogWeight::Zero(), only_state));
-        } else {
-          reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
-        }
+        reduced_tm.AddArc(only_state, LogArc(f, e, DirichletProb(e,f), only_state));
       }
     }
   }
@@ -193,88 +172,18 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
 
   Sentence translation = lattice.GetTranslation();
 
-  /*
-  LogWeight total = LogWeight::Zero();
-  for(int f : lattice.GetFWordIds()) {
-    total = fst::Plus(total, cpd[0][f]);
-  }
-  for(int f : lattice.GetFWordIds()) {
-    reduced_tm.AddArc(only_state, LogArc(f, 0, fst::Divide(cpd[0][f], total), only_state));
-  }
-  */
   for(int e = 1; e < e_vocab_size_; e++) {
-    LogWeight total = LogWeight::Zero();
     int times_in = in(e, translation);
-    //for(int i = 0; i < times_in; i++) {
     if(times_in > 0) {
       for(int f : lattice.GetFWordIds()) {
-        total = fst::Plus(total, cpd[e][f]);
-      }
-    //}
-      for(int f : lattice.GetFWordIds()) {
-        //LogWeight dupCoef = fst::LogWeight(-1*log(times_in)); // So that we can multiply the weight of the arc by the number of times we see the English word.
-        //reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(fst::Times(dupCoef, cpd[e][f]), total), only_state));
-        if(total == LogWeight::Zero()) {
-          reduced_tm.AddArc(only_state, LogArc(f, e, LogWeight::Zero(), only_state));
-        } else {
-          reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(cpd[e][f], total), only_state));
-        }
+        reduced_tm.AddArc(only_state, LogArc(f, e, cpd[e][f], only_state));
       }
     }
   }
-  //ArcSortFst<LogArc, ILabelCompare<LogArc>>(reduced_tm, ILabelCompare<LogArc>());
+
   ArcSort(&reduced_tm, ILabelCompare<LogArc>());
   return reduced_tm;
 }
-
-/** Create a TM based on the parameters that is constrained by the lattice's translation **/
-/*
-VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const vector<vector<fst::LogWeight>> & cpd) {
-  Timer time = Timer();
-  VectorFst<LogArc> reduced_tm;
-  VectorFst<LogArc>::StateId only_state = reduced_tm.AddState();
-  reduced_tm.SetStart(only_state);
-  reduced_tm.SetFinal(only_state, LogArc::Weight::One());
-
-  Sentence translation = lattice.GetTranslation();
-
-  cerr << "preloop: " << time.Elapsed() << endl;
-
-  // %TODO: Perhaps this should be optimized at some point.
-
-  // Starting at 1 because 0 represents an epsilon transition and we don't
-  // accept epsilon transitions on the foreign side in the translation model.
-  // That would result in loops in the composition.
-  for(int f_word_id = 1; f_word_id < f_vocab_size_; f_word_id++) {
-    // Normalizing the probabilities. Two steps:
-    // 1. Find the total probability mass of the p(f|e) for each of the English words that occur in
-    //    the translation given the foreign word.
-    LogWeight total = LogWeight::Zero();
-    // First add the probability of an epsilon (ie. null token) on the English side.
-    total = fst::Plus(total, cpd[0][f_word_id]);
-    // Then check each of the English words to see if they are in the
-    // translation, and add probability mass if they are
-    for(int e_word_id = 1; e_word_id < e_vocab_size_; e_word_id++) {
-      int times_in = in(e_word_id, translation);
-      for(int i = 0; i < times_in; i++) {
-        total = fst::Plus(total, cpd[e_word_id][f_word_id]);
-      }
-    }
-    // 2. Divide the conditional probability of each of the English words by the
-    //    aforementioned total when adding a corresponding arc to the WFST.
-    reduced_tm.AddArc(only_state, LogArc(f_word_id, 0, fst::Divide(cpd[0][f_word_id], total), only_state));
-    for(int e_word_id = 1; e_word_id < e_vocab_size_; e_word_id++) {
-      int times_in = in(e_word_id, translation);
-      for(int i = 0; i < times_in; i++) {
-        reduced_tm.AddArc(only_state, LogArc(f_word_id, e_word_id, fst::Divide(cpd[e_word_id][f_word_id], total), only_state));
-      }
-    }
-    cerr << "loop " << f_word_id << ": " << time.Elapsed() << endl;
-  }
-
-  return reduced_tm;
-}
-*/
 
 Alignment LexicalTM::CreateSample(const DataLattice & lattice, LLStats & stats) {
 
