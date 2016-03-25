@@ -6,7 +6,7 @@ epochs=10
 alphas=(0.5 1 2 4)
 weights=(0.5 1 2 4)
 
-outf="data/out/${dataset}_p(f|e)_nonulls_normalized_results.csv"
+outf="data/out/${dataset}_p(f|e)_nonulls_results.csv"
 
 ./plain_best_paths $dataset
 printf "ASR 1-best: " > $outf
@@ -16,8 +16,8 @@ python ../nlp/per.py \
 printf "score\tepochs\talpha\tweight\n" >> $outf
 for alpha in "${alphas[@]}"; do
 	for weight in "${weights[@]}"; do
-		./run $dataset $epochs $alpha $weight
-		./wer $dataset $epochs $alpha $weight >> $outf
+		./run $dataset $epochs $alpha $weight -1
+		./wer $dataset $epochs $alpha $weight -1 >> $outf
 		printf "\t${epochs}\t${alpha}\t${weight}\n" >> $outf
 	done
 done
