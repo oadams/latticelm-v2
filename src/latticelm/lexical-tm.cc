@@ -489,7 +489,9 @@ vector<vector<fst::LogWeight>> LexicalTM::load_f2e_TM(const string filename) {
       THROW_ERROR("TM probs loaded must be greater than 0.0");
     }
 
-    tm[(f != "NULL") ? f_vocab_.GetId(f) : 0][(e != "NULL") ? e_vocab_.GetId(e) : 0] = prob;
+    if(e_vocab_.KeyInMap(e) && f_vocab_.KeyInMap(f)) {
+      tm[(f != "NULL") ? f_vocab_.GetId(f) : 0][(e != "NULL") ? e_vocab_.GetId(e) : 0] = prob;
+    }
   }
 
   return tm;
