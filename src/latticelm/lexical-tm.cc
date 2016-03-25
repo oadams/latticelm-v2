@@ -149,17 +149,19 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice) {
 
   Sentence translation = lattice.GetTranslation();
 
-  // \frac{p(e|f)}{\sum_{f'}p(e|f')} with no nulls
+  // \frac{p(e|f)}{\sum_{e'}p(e'|f)} with no nulls
 
-  // Deal with the rest of the probabilities
-  for(int e = 1; e < e_vocab_size_; e++) {
-    int times_in = in(e, translation);
-    if(times_in > 0) {
-      LogWeight total = LogWeight::Zero();
-      for(int f : lattice.GetFWordIds()) {
+  for(int f : lattice.GetFWordIds()) {
+    LogWeight total = LogWeight::Zero();
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
         total = fst::Plus(total, DirichletProb(e,f));
       }
-      for(int f : lattice.GetFWordIds()) {
+    }
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
         reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(DirichletProb(e,f), total), only_state));
       }
     }
@@ -179,17 +181,19 @@ VectorFst<LogArc> LexicalTM::CreateReducedTM(const DataLattice & lattice, const 
 
   Sentence translation = lattice.GetTranslation();
 
-  // \frac{p(e|f)}{\sum_{f'}p(e|f')} with no nulls
+  // \frac{p(e|f)}{\sum_{e'}p(e'|f)} with no nulls
 
-  // Deal with the rest of the probabilities
-  for(int e = 1; e < e_vocab_size_; e++) {
-    int times_in = in(e, translation);
-    if(times_in > 0) {
-      LogWeight total = LogWeight::Zero();
-      for(int f : lattice.GetFWordIds()) {
+  for(int f : lattice.GetFWordIds()) {
+    LogWeight total = LogWeight::Zero();
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
         total = fst::Plus(total, cpd[f][e]);
       }
-      for(int f : lattice.GetFWordIds()) {
+    }
+    for(int e = 1; e < e_vocab_size_; e++) {
+      int times_in = in(e, translation);
+      if(times_in > 0) {
         reduced_tm.AddArc(only_state, LogArc(f, e, fst::Divide(cpd[f][e], total), only_state));
       }
     }
