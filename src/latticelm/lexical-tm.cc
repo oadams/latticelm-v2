@@ -144,27 +144,31 @@ void LexicalTM::RemoveSample(const Alignment & align) {
       string phoneme_word = PhonemeWord(ph_buf);
       WordId ph_word_id = f_vocab_.GetId(phoneme_word);
 
-      // Decrement the lexicon count.
-      if(f_count_[ph_word_id] > 0) {
-        f_count_[ph_word_id]--;
+      if (phoneme_word.find("+") != std::string::npos) {
+
+        // Decrement the lexicon count.
+        if(f_count_[ph_word_id] > 0) {
+          f_count_[ph_word_id]--;
+        }
+
+  /*
+        if(f_count_[ph_word_id] == 0) {
+          // Then we need to remove the path from the lexicon too.
+          cout << "Deleting " << phoneme_word << " states: " << lexicon_states_[ph_word_id] << endl;
+          lexicon_.DeleteStates(lexicon_states_[ph_word_id]);
+        }
+  */
+
+        // Update the English cache.
+        e_count_[arrow.second]--;
+        assert(e_count_[arrow.second] >= 0);
+
+        // Update the cache of alignments
+        std::pair<WordId, WordId> word_arrow = {ph_word_id, arrow.second};
+        align_count_[word_arrow]--;
+        assert(align_count_[word_arrow] >= 0);
+
       }
-
-/*
-      if(f_count_[ph_word_id] == 0) {
-        // Then we need to remove the path from the lexicon too.
-        cout << "Deleting " << phoneme_word << " states: " << lexicon_states_[ph_word_id] << endl;
-        lexicon_.DeleteStates(lexicon_states_[ph_word_id]);
-      }
-*/
-
-      // Update the English cache.
-      e_count_[arrow.second]--;
-      assert(e_count_[arrow.second] >= 0);
-
-      // Update the cache of alignments
-      std::pair<WordId, WordId> word_arrow = {ph_word_id, arrow.second};
-      align_count_[word_arrow]--;
-      assert(align_count_[word_arrow] >= 0);
 
       // Reset ph_buf and state_buf for new word
       ph_buf = vector<WordId>();
@@ -192,30 +196,34 @@ void LexicalTM::AddSample(const Alignment & align) {
       string phoneme_word = PhonemeWord(ph_buf);
       WordId ph_word_id = f_vocab_.GetId(phoneme_word);
 
-      // If phoneme_word is in the lexicon, increment the count. Otherwise, put
-      // it in the lexicon
-      if(f_count_.count(ph_word_id) == 1 && f_count_[ph_word_id] > 0) {
-        f_count_[ph_word_id]++;
-      } else {
-        // Then add the word to the lexicon update the foreign cache
-        AddWord(lexicon_, ph_buf, phoneme_word);
-        f_count_[ph_word_id] = 1;
-      }
+      if (phoneme_word.find("+") != std::string::npos) {
 
-      // Update the English cache.
-      if(e_count_.count(arrow.second) == 1 && e_count_[arrow.second] > 0) {
-        e_count_[arrow.second]++;
-      } else {
-        e_count_[arrow.second] = 1;
-      }
+        // If phoneme_word is in the lexicon, increment the count. Otherwise, put
+        // it in the lexicon
+        if(f_count_.count(ph_word_id) == 1 && f_count_[ph_word_id] > 0) {
+          f_count_[ph_word_id]++;
+        } else {
+          // Then add the word to the lexicon update the foreign cache
+          AddWord(lexicon_, ph_buf, phoneme_word);
+          f_count_[ph_word_id] = 1;
+        }
 
-      // Update the cache of alignments
-      std::pair<WordId, WordId> word_arrow = {ph_word_id, arrow.second};
-      if(align_count_.count(word_arrow) == 1 && align_count_[word_arrow] > 0) {
-        align_count_[word_arrow]++;
-      } else {
-        cout << word_arrow << " " << f_vocab_.GetSym(ph_word_id) << endl;
-        align_count_[word_arrow] = 1;
+        // Update the English cache.
+        if(e_count_.count(arrow.second) == 1 && e_count_[arrow.second] > 0) {
+          e_count_[arrow.second]++;
+        } else {
+          e_count_[arrow.second] = 1;
+        }
+
+        // Update the cache of alignments
+        std::pair<WordId, WordId> word_arrow = {ph_word_id, arrow.second};
+        if(align_count_.count(word_arrow) == 1 && align_count_[word_arrow] > 0) {
+          align_count_[word_arrow]++;
+        } else {
+          cout << word_arrow << " " << f_vocab_.GetSym(ph_word_id) << endl;
+          align_count_[word_arrow] = 1;
+        }
+
       }
 
       // Reset ph_buf and state_buf for new word
